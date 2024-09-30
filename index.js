@@ -1,7 +1,3 @@
-function createPlayer(name, marker) {
-  return { name, marker };
-}
-
 function gameboard() {
   const rows = 3;
   const columns = 3;
