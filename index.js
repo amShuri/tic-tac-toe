@@ -10,7 +10,7 @@ function gameboard() {
   for (let i = 0; i < rows; i++) {
     board[i] = [];
     for (let j = 0; j < columns; j++) {
-      board[i].push(0);
+      board[i].push("");
     }
   }
 
@@ -18,25 +18,24 @@ function gameboard() {
 
   const getCell = (row, col) => board[row][col];
 
+  const getBoardRows = () => rows;
+
   const placeMarker = (row, col, player) => {
-    if (board[row][col] === 0) {
+    if (board[row][col] === "") {
       board[row][col] = player;
     }
   };
 
-  const printBoard = () => {
-    console.log(board);
-  };
-
-  return { getBoard, getCell, printBoard, placeMarker };
+  return { getBoard, getCell, getBoardRows, placeMarker };
 }
 
 function gameController() {
   const board = gameboard();
-  const playerOne = createPlayer("Player One", 1);
-  const playerTwo = createPlayer("Player Two", 2);
+  const playerOne = createPlayer("Player One", "X");
+  const playerTwo = createPlayer("Player Two", "O");
   let activePlayer = playerOne;
   let turnCount = 0;
+  let isGameOver = 0;
 
   const switchPlayerTurn = () => {
     activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
@@ -44,32 +43,37 @@ function gameController() {
 
   const getActivePlayer = () => activePlayer;
 
+  // The game result will be represented by 0, 1 and 2:
+  // 0: game is till going
+  // 1: game is over with a Winner
+  // 2: game is over with a Tie
+  const getGameResult = () => isGameOver;
+
   const increaseTurnCount = () => {
     turnCount++;
   };
 
-  const printNewRound = () => {
-    board.printBoard();
-    console.log(`${getActivePlayer().name}'s turn.`);
-  };
-
   const playRound = (row, col) => {
-    if (board.getCell(row, col) !== 0) {
+    if (isGameOver) {
+      console.log("Game over. Restart the game!");
+      return;
+    }
+    if (board.getCell(row, col) !== "") {
       console.log("Occupied by another player. Try a different cell.");
       return;
     }
 
     const activePlayer = getActivePlayer();
 
-    console.log(`Move ${activePlayer.name}'s marker to row ${row} col ${col}.`);
     board.placeMarker(row, col, activePlayer.marker);
     increaseTurnCount();
 
     // Win conditions
     const updatedBoard = board.getBoard();
+    const boardRows = board.getBoardRows();
     const winConditions = {
-      horizontal: Array.from({ length: 3 }, () => []),
-      vertical: Array.from({ length: 3 }, () => []),
+      horizontal: Array.from({ length: boardRows }, () => []),
+      vertical: Array.from({ length: boardRows }, () => []),
       leftDiagonal: [],
       rightDiagonal: [],
     };
@@ -84,33 +88,91 @@ function gameController() {
     }
 
     const isWin = (cells, player) => cells.every((cell) => cell === player);
-
-    // Check for a winner and stop the function if winner is found.
     if (
       isWin(winConditions.leftDiagonal, activePlayer.marker) ||
       isWin(winConditions.rightDiagonal, activePlayer.marker) ||
       winConditions.horizontal.some((row) => isWin(row, activePlayer.marker)) ||
       winConditions.vertical.some((row) => isWin(row, activePlayer.marker))
     ) {
-      console.log("Game Over!");
-      console.log(`${activePlayer.name} wins!`);
+      isGameOver = 1;
       return;
     }
 
-    // If there is no winner and turn count is equal to 9 the game is a tie.
-    if (turnCount === 9) {
-      console.log("Game Over!");
-      console.log("That is a tie!");
+    // It's a tie when the turn count equals the board size (3x3 in this case)
+    if (turnCount === boardRows * boardRows) {
+      isGameOver = 2;
       return;
     }
 
     // Switch player turn
     switchPlayerTurn();
-    printNewRound();
   };
 
-  return { playRound };
+  return {
+    playRound,
+    getActivePlayer,
+    getGameResult,
+    getBoard: board.getBoard,
+    getCell: board.getCell,
+  };
 }
 
-const game = gameController();
-console.warn(`use game.playRound(row, col) to play the game.`);
+function screenController() {
+  const game = gameController();
+  const boardDiv = document.querySelector(".board");
+  const playerTurnDiv = document.querySelector(".player-turn");
+
+  const updateScreen = () => {
+    boardDiv.innerHTML = "";
+
+    // get the updated board
+    const board = game.getBoard();
+    const activePlayer = game.getActivePlayer();
+    const gameResult = game.getGameResult();
+
+    // change the text color depending on the player
+    playerTurnDiv.classList.remove("blue", "red");
+    playerTurnDiv.classList.add(activePlayer.marker === "X" ? "blue" : "red");
+
+    // display each players turn
+    playerTurnDiv.textContent = `${activePlayer.marker} Turn`;
+
+    switch (gameResult) {
+      case 1:
+        playerTurnDiv.textContent = `${activePlayer.marker} WINS`;
+        break;
+      case 2:
+        playerTurnDiv.textContent = "TIE";
+    }
+
+    for (let i = 0; i < board.length; i++) {
+      const $container = document.createElement("div");
+      $container.classList.add("container");
+
+      for (let j = 0; j < board.length; j++) {
+        $container.insertAdjacentHTML(
+          "beforeend",
+          `
+          <div class="cell" data-row="${i}" data-col="${j}">
+            ${game.getCell(i, j)}
+          </div>
+          `
+        );
+      }
+      boardDiv.appendChild($container);
+    }
+  };
+
+  function clickHandlerBoard(e) {
+    const selectedCell = e.target;
+    if (!selectedCell.classList.contains("cell")) return;
+
+    game.playRound(selectedCell.dataset.row, selectedCell.dataset.col);
+    updateScreen();
+  }
+  boardDiv.addEventListener("click", clickHandlerBoard);
+
+  updateScreen();
+}
+
+screenController();

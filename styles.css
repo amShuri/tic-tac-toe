@@ -1,0 +1,46 @@
+body {
+  width: 650px;
+  margin: 0 auto;
+  user-select: none;
+
+  font-family: "Roboto", sans-serif;
+}
+
+.board {
+  background-color: #555555;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+}
+
+.container {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.cell {
+  color: #555555;
+  font-size: 4rem;
+  width: calc(650px / 3);
+  height: 200px;
+  background-color:#fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-turn {
+  text-align: center;
+}
+
+.blue {
+  color: #0284c7;
+}
+
+.red {
+  color: #f43f5e;
+}
