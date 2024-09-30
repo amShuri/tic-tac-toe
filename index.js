@@ -29,16 +29,24 @@ function gameboard() {
   return { getBoard, getCell, getBoardRows, placeMarker };
 }
 
-function gameController() {
+function gameController(playerOne = "Player One", playerTwo = "Player Two") {
   const board = gameboard();
-  const playerOne = createPlayer("Player One", "X");
-  const playerTwo = createPlayer("Player Two", "O");
-  let activePlayer = playerOne;
+  const players = [
+    {
+      name: playerOne,
+      marker: "X",
+    },
+    {
+      name: playerTwo,
+      marker: "O",
+    },
+  ];
+  let activePlayer = players[0];
   let turnCount = 0;
   let isGameOver = 0;
 
   const switchPlayerTurn = () => {
-    activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
+    activePlayer = activePlayer === players[0] ? players[1] : players[0];
   };
 
   const getActivePlayer = () => activePlayer;
@@ -118,7 +126,10 @@ function gameController() {
 }
 
 function screenController() {
-  const game = gameController();
+  const game = gameController(
+    prompt("Enter player name", "Player One") || "Player One",
+    prompt("Enter player name", "Player Two") || "Player Two"
+  );
   const boardDiv = document.querySelector(".board");
   const playerTurnDiv = document.querySelector(".player-turn");
 
@@ -135,11 +146,11 @@ function screenController() {
     playerTurnDiv.classList.add(activePlayer.marker === "X" ? "blue" : "red");
 
     // display each players turn
-    playerTurnDiv.textContent = `${activePlayer.marker} Turn`;
+    playerTurnDiv.textContent = `${activePlayer.name}'s Turn`;
 
     switch (gameResult) {
       case 1:
-        playerTurnDiv.textContent = `${activePlayer.marker} WINS`;
+        playerTurnDiv.textContent = `${activePlayer.name} WINS`;
         break;
       case 2:
         playerTurnDiv.textContent = "TIE";
@@ -163,16 +174,24 @@ function screenController() {
     }
   };
 
-  function clickHandlerBoard(e) {
+  const clickHandlerBoard = (e) => {
     const selectedCell = e.target;
     if (!selectedCell.classList.contains("cell")) return;
 
     game.playRound(selectedCell.dataset.row, selectedCell.dataset.col);
     updateScreen();
-  }
+  };
   boardDiv.addEventListener("click", clickHandlerBoard);
 
   updateScreen();
 }
 
-screenController();
+document.querySelector("#start").addEventListener("click", (e) => {
+  const button = e.target;
+  if (button.textContent === "RESTART GAME") {
+    if (!confirm("Restart game?")) return;
+  }
+
+  button.textContent = "RESTART GAME";
+  screenController();
+});
