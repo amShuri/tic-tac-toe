@@ -25,7 +25,7 @@ function gameboard() {
   return { getBoard, getCell, getBoardRows, placeMarker };
 }
 
-function gameController(playerOne = "Player One", playerTwo = "Player Two") {
+function gameController(playerOne, playerTwo) {
   const board = gameboard();
   const players = [
     {
