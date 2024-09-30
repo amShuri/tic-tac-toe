@@ -150,6 +150,7 @@ function screenController() {
         break;
       case 2:
         playerTurnDiv.textContent = "TIE";
+        break;
     }
 
     for (let i = 0; i < board.length; i++) {
